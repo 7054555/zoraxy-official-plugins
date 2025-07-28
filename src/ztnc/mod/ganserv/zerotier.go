@@ -304,7 +304,7 @@ func (m *NetworkManager) networkExists(networkId string) bool {
 
 // delete a network
 func (m *NetworkManager) deleteNetwork(networkID string) error {
-	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/"+networkId
+	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/" + networkID
 	client := &http.Client{}
 
 	// Create a new DELETE request
@@ -338,7 +338,7 @@ func (m *NetworkManager) deleteNetwork(networkID string) error {
 // Configure network
 // Example: configureNetwork(netid, "192.168.192.1", "192.168.192.254", "192.168.192.0/24")
 func (m *NetworkManager) configureNetwork(networkID string, ipRangeStart string, ipRangeEnd string, routeTarget string) error {
-	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/"+networkId
+	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/"+networkID
 	data := map[string]interface{}{
 		"ipAssignmentPools": []map[string]string{
 			{
@@ -516,8 +516,7 @@ func (m *NetworkManager) getNetworkMembers(networkId string) ([]string, error) {
 		return nil, errors.New("failed to get network members")
 	}
 
-	// memberList := map[string]int{}
-	memberList := []string{}
+	memberList := map[string]int{}
 	
 	payload, err := io.ReadAll(resp.Body)
 	if err != nil {
