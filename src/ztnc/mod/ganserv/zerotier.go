@@ -131,7 +131,7 @@ func getControllerInfo(token string, apiPort int) (*NodeInfo, error) {
 		return nil, err
 	}
 
-	req.Header.Set("X-ZT1-AUTH", token)
+	req.Header.Set("X-ZT1-Auth", token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -161,15 +161,15 @@ func getControllerInfo(token string, apiPort int) (*NodeInfo, error) {
 */
 //Create a zerotier network
 func (m *NetworkManager) createNetwork() (*NetworkInfo, error) {
-	url := fmt.Sprintf("http://localhost:"+strconv.Itoa(m.apiPort)+"/controller/network/%s______", m.ControllerID)
-
+	// url := fmt.Sprintf("http://localhost:"+strconv.Itoa(m.apiPort)+"/controller/network/%s______", m.ControllerID)
+	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network"
 	data := []byte(`{}`)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("X-ZT1-AUTH", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -194,18 +194,18 @@ func (m *NetworkManager) createNetwork() (*NetworkInfo, error) {
 
 // List network details
 func (m *NetworkManager) getNetworkInfoById(networkId string) (*NetworkInfo, error) {
-	req, err := http.NewRequest("GET", os.ExpandEnv("http://localhost:"+strconv.Itoa(m.apiPort)+"/controller/network/"+networkId+"/"), nil)
+	req, err := http.NewRequest("GET", os.ExpandEnv("http://localhost:"+strconv.Itoa(m.apiPort)+"/controller/network/"+networkId), nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("X-Zt1-Auth", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, errors.New("network error. Status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -231,12 +231,12 @@ func (m *NetworkManager) setNetworkInfoByID(networkId string, newNetworkInfo *Ne
 	payloadBuffer := bytes.NewBuffer(payloadBytes)
 
 	// Create the HTTP request
-	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/" + networkId + "/"
+	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/"+networkId
 	req, err := http.NewRequest("POST", url, payloadBuffer)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-Zt1-Auth", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Send the HTTP request
@@ -247,7 +247,7 @@ func (m *NetworkManager) setNetworkInfoByID(networkId string, newNetworkInfo *Ne
 	defer resp.Body.Close()
 
 	// Print the response status code
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -260,7 +260,7 @@ func (m *NetworkManager) listNetworkIds() ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-	req.Header.Set("X-Zt1-Auth", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -268,7 +268,7 @@ func (m *NetworkManager) listNetworkIds() ([]string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return []string{}, errors.New("network error")
 	}
 
@@ -304,7 +304,7 @@ func (m *NetworkManager) networkExists(networkId string) bool {
 
 // delete a network
 func (m *NetworkManager) deleteNetwork(networkID string) error {
-	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/" + networkID + "/"
+	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/"+networkId
 	client := &http.Client{}
 
 	// Create a new DELETE request
@@ -314,7 +314,7 @@ func (m *NetworkManager) deleteNetwork(networkID string) error {
 	}
 
 	// Add the required authorization header
-	req.Header.Set("X-Zt1-Auth", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 
 	// Send the request and get the response
 	resp, err := client.Do(req)
@@ -328,7 +328,7 @@ func (m *NetworkManager) deleteNetwork(networkID string) error {
 	fmt.Println(string(s), err, resp.StatusCode)
 
 	// Print the response status code
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -338,7 +338,7 @@ func (m *NetworkManager) deleteNetwork(networkID string) error {
 // Configure network
 // Example: configureNetwork(netid, "192.168.192.1", "192.168.192.254", "192.168.192.0/24")
 func (m *NetworkManager) configureNetwork(networkID string, ipRangeStart string, ipRangeEnd string, routeTarget string) error {
-	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/" + networkID + "/"
+	url := "http://localhost:" + strconv.Itoa(m.apiPort) + "/controller/network/"+networkId
 	data := map[string]interface{}{
 		"ipAssignmentPools": []map[string]string{
 			{
@@ -367,7 +367,7 @@ func (m *NetworkManager) configureNetwork(networkID string, ipRangeStart string,
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-ZT1-AUTH", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -377,7 +377,7 @@ func (m *NetworkManager) configureNetwork(networkID string, ipRangeStart string,
 
 	defer resp.Body.Close()
 	// Print the response status code
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -401,7 +401,7 @@ func (m *NetworkManager) setAssignedIps(networkID string, memid string, newIps [
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-ZT1-AUTH", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -411,7 +411,7 @@ func (m *NetworkManager) setAssignedIps(networkID string, memid string, newIps [
 
 	defer resp.Body.Close()
 	// Print the response status code
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -448,7 +448,7 @@ func (m *NetworkManager) setNetworkNameAndDescription(netid string, name string,
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-ZT1-AUTH", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -458,7 +458,7 @@ func (m *NetworkManager) setNetworkNameAndDescription(netid string, name string,
 
 	defer resp.Body.Close()
 	// Print the response status code
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -502,7 +502,7 @@ func (m *NetworkManager) getNetworkMembers(networkId string) ([]string, error) {
 		return nil, err
 	}
 
-	req.Header.Set("X-ZT1-AUTH", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -516,7 +516,9 @@ func (m *NetworkManager) getNetworkMembers(networkId string) ([]string, error) {
 		return nil, errors.New("failed to get network members")
 	}
 
-	memberList := map[string]int{}
+	// memberList := map[string]int{}
+	memberList := []string{}
+	
 	payload, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -556,7 +558,7 @@ func (m *NetworkManager) getNetworkMemberInfo(netid string, memberid string) (*M
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("X-Zt1-Auth", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -590,7 +592,7 @@ func (m *NetworkManager) AuthorizeMember(netid string, memberid string, setAutho
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-ZT1-AUTH", m.authToken)
+	req.Header.Set("X-ZT1-Auth", m.authToken)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -598,7 +600,7 @@ func (m *NetworkManager) AuthorizeMember(netid string, memberid string, setAutho
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. Status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -611,7 +613,7 @@ func (m *NetworkManager) deleteMember(netid string, memid string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-Zt1-Auth", os.ExpandEnv(m.authToken))
+	req.Header.Set("X-ZT1-Auth", os.ExpandEnv(m.authToken))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -619,7 +621,7 @@ func (m *NetworkManager) deleteMember(netid string, memid string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. Status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -628,11 +630,11 @@ func (m *NetworkManager) deleteMember(netid string, memid string) error {
 
 // Make the host to join a given network
 func (m *NetworkManager) joinNetwork(netid string) error {
-	req, err := http.NewRequest("POST", "http://localhost:"+strconv.Itoa(m.apiPort)+"/network/"+netid, nil)
+	req, err := http.NewRequest("POST", "http://localhost:"+strconv.Itoa(m.apiPort)+"/controller/network/"+netid, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-Zt1-Auth", os.ExpandEnv(m.authToken))
+	req.Header.Set("X-ZT1-Auth", os.ExpandEnv(m.authToken))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -640,7 +642,7 @@ func (m *NetworkManager) joinNetwork(netid string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. Status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
@@ -653,7 +655,7 @@ func (m *NetworkManager) leaveNetwork(netid string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-Zt1-Auth", os.ExpandEnv(m.authToken))
+	req.Header.Set("X-ZT1-Auth", os.ExpandEnv(m.authToken))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -661,7 +663,7 @@ func (m *NetworkManager) leaveNetwork(netid string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return errors.New("network error. Status code: " + strconv.Itoa(resp.StatusCode))
 	}
 
