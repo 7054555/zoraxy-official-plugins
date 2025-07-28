@@ -256,7 +256,7 @@ func (m *NetworkManager) setNetworkInfoByID(networkId string, newNetworkInfo *Ne
 
 // List network IDs
 func (m *NetworkManager) listNetworkIds() ([]string, error) {
-	req, err := http.NewRequest("GET", "http://localhost:"+strconv.Itoa(m.apiPort)+"/controller/network/", nil)
+	req, err := http.NewRequest("GET", "http://localhost:"+strconv.Itoa(m.apiPort)+"/controller/network", nil)
 	if err != nil {
 		return []string{}, err
 	}
